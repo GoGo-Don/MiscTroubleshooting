@@ -1,0 +1,19 @@
+# Verbose hardware output (may contain EDID/serial numbers)
+*.edid
+*.bin
+*-verbose.txt
+
+# Session errors (may contain paths/usernames)
+*.xsession-errors
+.xsession-errors
+
+# Journal dumps
+logs/journal-*.txt
+
+# rclone config (contains OAuth tokens)
+rclone.conf
+*.rclone.conf
+
+# Private env files
+.env
+*.secret

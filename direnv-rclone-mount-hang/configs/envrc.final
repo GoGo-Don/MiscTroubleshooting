@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -e
+
+# Python venv
+if [ -f ".venv/bin/activate" ]; then
+  source ".venv/bin/activate"
+fi
+
+if ! grep -qF "$PWD/Shared_Dir" /proc/mounts; then
+  fusermount -uz "$PWD/Shared_Dir" 2>/dev/null || true
+  setsid rclone mount MyDrive: "$PWD/Shared_Dir" \
+    --drive-root-folder-id <your-drive-folder-id> \
+    </dev/null &>/dev/null &
+  disown
+fi
+
