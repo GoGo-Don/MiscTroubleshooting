@@ -17,3 +17,6 @@ rclone.conf
 # Private env files
 .env
 *.secret
+
+# Visual brainstorming companion
+.superpowers/
