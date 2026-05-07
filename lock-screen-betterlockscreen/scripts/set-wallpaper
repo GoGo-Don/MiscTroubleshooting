@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+#
+# Usage: set-wallpaper [PATH]
+#   No arg: prompts for directory, opens fzf with chafa preview to pick image
+#   With arg: uses PATH directly
+
+set -euo pipefail
+
+CACHE_RECORD="$HOME/.cache/betterlockscreen/last-cached-wallpaper"
+I3_WALLPAPER_CONF="$HOME/.config/i3/wallpaper.conf"
+
+# ── Resolve path ─────────────────────────────────────────────────────────────
+
+if [[ $# -ge 1 ]]; then
+    path="$1"
+else
+    default_dir="${WALLPAPER_DIR:-$HOME/Downloads}"
+    read -rp "Wallpaper directory [$default_dir]: " dir
+    dir="${dir:-$default_dir}"
+    [[ -d "$dir" ]] || { echo "set-wallpaper: directory not found: $dir" >&2; exit 1; }
+    if command -v yazi &>/dev/null; then
+        tmp=$(mktemp)
+        yazi --chooser-file="$tmp" "$dir"
+        path=$(cat "$tmp")
+        rm -f "$tmp"
+    elif command -v zenity &>/dev/null; then
+        path=$(zenity --file-selection \
+            --title="Select wallpaper" \
+            --filename="$dir/" \
+            --file-filter="Images | *.jpg *.jpeg *.png *.webp *.JPG *.JPEG *.PNG *.WEBP")
+    else
+        echo "set-wallpaper: install yazi or zenity for interactive picker" >&2; exit 1
+    fi
+    [[ -n "$path" ]] || { echo "set-wallpaper: no image selected" >&2; exit 1; }
+fi
+
+# ── Validate ──────────────────────────────────────────────────────────────────
+
+# Layer 1: canonicalize + confirm exists
+path=$(realpath --canonicalize-existing -- "$path") || {
+    echo "set-wallpaper: path does not exist: $path" >&2; exit 1
+}
+
+# Layer 2: reject newline / CR / NUL
+if printf '%s' "$path" | grep -qP '[\n\r\x00]'; then
+    echo "set-wallpaper: path contains illegal characters" >&2; exit 1
+fi
+
+# Layer 3: strict character allowlist
+if [[ ! "$path" =~ ^[a-zA-Z0-9/_.\ -]+$ ]]; then
+    echo "set-wallpaper: path contains disallowed characters: $path" >&2; exit 1
+fi
+
+# Layer 4: image extension allowlist
+if [[ ! "$path" =~ \.(jpg|jpeg|png|webp)$ ]]; then
+    echo "set-wallpaper: not an allowed image type: $path" >&2; exit 1
+fi
+
+# ── Apply wallpaper ───────────────────────────────────────────────────────────
+
+feh --bg-fill "$path"
+
+# ── Persist in i3 include file ────────────────────────────────────────────────
+
+escaped="${path//\\/\\\\}"
+escaped="${escaped//\"/\\\"}"
+printf 'exec --no-startup-id sleep 1 && feh --bg-fill "%s"\n' "$escaped" \
+    > "$I3_WALLPAPER_CONF"
+
+# ── Update betterlockscreen cache (only if wallpaper changed) ─────────────────
+
+cached=$(cat "$CACHE_RECORD" 2>/dev/null || true)
+if [[ "$path" != "$cached" ]]; then
+    if command -v betterlockscreen &>/dev/null; then
+        betterlockscreen -u "$path" &
+        mkdir -p "$(dirname "$CACHE_RECORD")"
+        echo "$path" > "$CACHE_RECORD"
+        echo "set-wallpaper: lock screen cache updating in background..."
+    fi
+fi
+
+echo "set-wallpaper: done — $path"

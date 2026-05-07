@@ -1,0 +1,45 @@
+# betterlockscreen config — Arc-Dark palette, JetBrains Mono
+# Place at: ~/.config/betterlockscreenrc
+
+# Clock
+time_format="%H:%M"
+time_font="JetBrains Mono"
+time_size=64
+
+# Date
+date_format="%A, %-d %B %Y"
+date_font="JetBrains Mono"
+date_size=13
+
+# Greeter (username below password ring)
+show_greeter=true
+greeter_font="JetBrains Mono"
+greeter_size=11
+
+# Blur
+blur_level=1
+
+# Colors — Arc-Dark palette (RRGGBBAA)
+time_color=d3dae3ff
+date_color=7c818cff
+greeter_color=4b5162ff
+layout_color=7c818cff
+
+# Password ring
+ring_color=4b5162ff
+ringver_color=5294e288
+ringwrong_color=cc575d88
+inside_color=383c4a88
+inside_ver_color=383c4a88
+inside_wrong_color=383c4a88
+keyhl_color=5294e2ff
+bshl_color=cc575dff
+separator_color=00000000
+verif_color=5294e2ff
+wrong_color=cc575dff
+ring_width=3.0
+
+# Overlay text (-t arg from lock script)
+text_color=a0a8b8ff
+text_font="JetBrains Mono"
+text_size=13
